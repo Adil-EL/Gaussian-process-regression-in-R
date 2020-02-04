@@ -1,45 +1,54 @@
-# Majeure Science des Données 2019-2020
-# UP4 : exploitation de simulateurs numériques
-# Gaussian process regression - Kriging
-# Script du TP à compléter...
+# Implementing a Gaussian Process Regression
 
-library(MASS) # fonction mvrnorm()
+library(MASS) # function mvrnorm()
 
-# Mouvement brownien
+##--------------1: Brownian kernel-------------------
 
-# Noyau brownien 
 kBrown <- function(x,y,param=NULL){
   if(is.null(param)) param <-1
   param*outer(c(x),c(y),"pmin")
 }
-# Exemple d'utilisation de la fonction kBrown
+
+# Examples
+
 X <- c(0.1,0.5,0.9)
 kXX <- kBrown(X,X); print(kXX)
 x <- 0.8
 kxX <- kBrown(x,X); print(kxX)
 
-# Simulation du mouvement brownien standard B
 
-ngrid <- 400 # nombre de points de discrétisation
-xgrid <- matrix(seq(from=0, to=1, length=ngrid),ncol=1) 
-Kxgrid <- kBrown(xgrid,xgrid) 
-muB <- 0*xgrid # moyenne du processus B
-varB <- diag(Kxgrid) # variance de B
+##------------ 2: Simulating a brownien motion----------------
 
-# Simulation avec mvrnorm = multivariate random normal
-# attention Sigma = matrice de covariance
+
+ngrid <- 400                  # number of points
+
+xgrid <- matrix(seq(from=0, to=1, length=ngrid),ncol=1)# the grid of the points
+
+
+Kxgrid <- kBrown(xgrid,xgrid) # the brownien kernel 
+
+muB <- 0*xgrid                # the mean of the Gaussian Process
+
+varB <- diag(Kxgrid)          # The variance of the GP
+
+# Simulation using the mvrnorm (multivariate random normal).
+# !! Sigma is the covariance matrix.
 
 yB <- mvrnorm(n=5,mu=muB,Sigma=Kxgrid)
-yB <- t(yB) # simulations en colonne
+yB <- t(yB)
 
+
+##--------------- The Simulation---------------------
 matplot(xgrid, yB, type='l', xlab="Temps t", ylab="B(t)", ylim=c(-3,3),
         main="Simulations du MB standard")
 abline(h=0, lty=2)
 lines(xgrid,1.96*sqrt(varB),lty=2,col="red")
 lines(xgrid,-1.96*sqrt(varB),lty=2,col="red")
 
-# Krigeage avec le noyau brownien
 
+##------------------ The Gaussian Process Regression-----------
+
+# Creating a training set of five points
 n <- 5
 X <- matrix(seq(from=0.1, to=0.9, length=n), ncol=1)
 yX <- matrix(c(0.5, 0, 2.5, 3, 2), ncol=1)
@@ -49,6 +58,7 @@ points(0,0)
 abline(h=0, lty=2)
 abline(v=0, lty=2)
 
+# From 5 points we interfer to 501 points
 m <- 501
 x <- matrix(seq(from=0, to=1, length=m),ncol=1)
 kxx <- kBrown(x,x)
@@ -80,7 +90,7 @@ lines(x, mu.krig, col="red",lwd=2)
 for (simu in 1:5){
   lines(x, y.krig[simu,]) #col=darkbluetr)
 }
-title(main="Krigeage avec le noyau brownien",cex.main=1)
+title(main="GPR using a brownien kernel",cex.main=1)
 
 
 
